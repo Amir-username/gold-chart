@@ -106,7 +106,6 @@ export default function App() {
     };
   }, []);
 
-  
   useEffect(() => {
     let cancelled = false;
 
@@ -192,9 +191,7 @@ export default function App() {
                   fontSize: 12,
                   fontFamily: "inherit",
                 }}
-                labelFormatter={(v) =>
-                  new Date(Number(v) * 1000).toLocaleDateString("fa-IR")
-                }
+                labelFormatter={()=><div></div>}
                 formatter={(v) => [`${fa(Number(v))} تومان`, "قیمت"]}
               />
               <Area
