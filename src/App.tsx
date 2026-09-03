@@ -58,54 +58,83 @@ export default function App() {
   const [err, setErr] = useState("");
 
   useEffect(() => {
-    fetch(HISTORY_URL)
-      .then((r) => r.json())
-      .then((d) => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch(HISTORY_URL);
+        const d = await res.json();
+        if (cancelled) return;
         if (d.s !== "ok") throw new Error("درخواست ناموفق بود");
         setHistory(d.t.map((t: number, i: number) => ({ t, c: d.c[i] })));
-      })
-      .catch((e) => setErr(String(e)));
+      } catch (e) {
+        if (!cancelled) setErr(String(e));
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
-    const tick = () =>
-      fetch(LIVE_URL)
-        .then((r) => r.json())
-        .then((d) => {
-          const g = d.current?.geram18;
-          if (!g) return;
-          setLive({
-            p: toNum(g.p),
-            ts: Math.floor(new Date(g.ts.replace(" ", "T")).getTime() / 1000),
-            dt: g.dt,
-            dp: g.dp,
-          });
-        })
-        .catch((e) => setErr(String(e)));
+    let cancelled = false;
+
+    const tick = async () => {
+      try {
+        const res = await fetch(LIVE_URL);
+        const d = await res.json();
+        if (cancelled) return;
+        const g = d.current?.geram18;
+        if (!g) return;
+        setLive({
+          p: toNum(g.p),
+          ts: Math.floor(new Date(g.ts.replace(" ", "T")).getTime() / 1000),
+          dt: g.dt,
+          dp: g.dp,
+        });
+      } catch (e) {
+        if (!cancelled) setErr(String(e));
+      }
+    };
+
     tick();
     const id = setInterval(tick, 5000);
-    return () => clearInterval(id);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, []);
 
+  
   useEffect(() => {
-    const tick = () =>
-      fetch(CARDS_URL)
-        .then((r) => r.json())
-        .then((d) => {
-          const cur = d.currencies || {};
-          setCards(
-            CARDS.filter((sym) => cur[sym]?.IRT).map((sym) => ({
-              sym,
-              name: CARD_NAME[sym] || sym,
-              price: Number(cur[sym].IRT.price),
-              change: Number(cur[sym].IRT.change_percent_24),
-            })),
-          );
-        })
-        .catch((e) => setErr(String(e)));
+    let cancelled = false;
+
+    const tick = async () => {
+      try {
+        const res = await fetch(CARDS_URL);
+        const d = await res.json();
+        if (cancelled) return;
+        const cur = d.currencies || {};
+        setCards(
+          CARDS.filter((sym) => cur[sym]?.IRT).map((sym) => ({
+            sym,
+            name: CARD_NAME[sym] || sym,
+            price: Number(cur[sym].IRT.price),
+            change: Number(cur[sym].IRT.change_percent_24),
+          })),
+        );
+      } catch (e) {
+        if (!cancelled) setErr(String(e));
+      }
+    };
+
     tick();
     const id = setInterval(tick, 30000);
-    return () => clearInterval(id);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, []);
 
   const merged: Point[] =
