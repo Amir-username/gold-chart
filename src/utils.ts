@@ -18,3 +18,17 @@ export function mergeLiveIntoHistory(
     i === history.length - 1 ? { ...p, c: live.p } : p,
   );
 }
+
+export function sanitizePoints(points: Point[]): Point[] {
+  const sorted = [...points].sort((a, b) => a.t - b.t);
+  const out: Point[] = [];
+  for (const p of sorted) {
+    if (!Number.isFinite(p.t) || !Number.isFinite(p.c)) continue;
+    if (out.length && out[out.length - 1].t === p.t) {
+      out[out.length - 1] = p; // duplicate timestamp → later entry wins
+    } else {
+      out.push(p);
+    }
+  }
+  return out;
+}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { sanitizePoints } from "../utils";
 import type { Point } from "../types";
 
 const HISTORY_URL =
@@ -16,7 +17,9 @@ export function useGoldHistory() {
         const d = await res.json();
         if (cancelled) return;
         if (d.s !== "ok") throw new Error("درخواست ناموفق بود");
-        setHistory(d.t.map((t: number, i: number) => ({ t, c: d.c[i] })));
+        setHistory(
+          sanitizePoints(d.t.map((t: number, i: number) => ({ t, c: d.c[i] }))),
+        );
       } catch (e) {
         if (!cancelled) setErr(String(e));
       }
